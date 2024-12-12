@@ -1,0 +1,33 @@
+{
+  "name": "express-mongodb",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000e\u0000x\u0000p\u0000r\u0000e\u0000s\u0000s\u0000-\u0000m\u0000o\u0000n\u0000g\u0000o\u0000d\u0000b\u0000\r\u0000 \u0000",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trincellshelvin/express-mongodb.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/trincellshelvin/express-mongodb/issues"
+  },
+  "homepage": "https://github.com/trincellshelvin/express-mongodb#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "mongodb": "^6.11.0",
+    "mongoose": "^8.8.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
