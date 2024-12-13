@@ -1,11 +1,12 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import User from './models/users.js';  
+import User from './models/users.js';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const app = express();
-const port = 3000;  
+const port = 3000;
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -13,6 +14,7 @@ app.use(express.json());
 dotenv.config();
 
 const mongoURL = process.env.MONGO_URL;
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret'
 
 // Connect to MongoDB
 mongoose
@@ -31,22 +33,42 @@ app.get('/', (req, res) => {
     res.send('Hello, World!');
 });
 
+async function verifyPassword(email, plainPassword) { 
+    try { 
+        const user = await User.findOne({ email }); 
+        if (!user) { 
+            console.log('User not found'); 
+            return false; 
+        } 
+        const isMatch = await bcrypt.compare(plainPassword, user.password); 
+        if (!isMatch) { 
+            console.log('Invalid password'); 
+        } else { console.log('Password is valid'); 
+
+        } 
+        return isMatch; 
+    } catch (error) { 
+        console.error('Error verifying password:', error); 
+        return false; 
+    }
+}
+
 app.post('/register', async (req, res) => {
     try {
         const { name, email, password, age, isActive } = req.body;
-        
+
         if (!name || !email || !password) {
             return res.status(400).send({ error: 'Name, email, and password are required' });
         }
-        
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        const newUser = new User({ 
-            name, 
-            email, 
-            password: hashedPassword, 
-            age, 
-            isActive 
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        console.log(hashedPassword);
+        const newUser = new User({
+            name,
+            email,
+            password: hashedPassword,
+            age,
+            isActive
         });
         await newUser.save();
         res.status(201).send(newUser);
@@ -55,6 +77,47 @@ app.post('/register', async (req, res) => {
     }
 });
 
+app.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        console.log('Login request received:', {email, password});
+        if (!email || !password) {
+            return res.status(400).send({ error: 'Email and password are required' });
+        } 
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).send({ error: 'User not found' });
+        }
+        console.log('User found:', user);
+        console.log('Comparing password:', password);
+        console.log('With hashed password:', user.password);
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        console.log('Password match result:', isMatch);
+        if (!isMatch) {
+            console.log('Invalid credentials');
+            return res.status(401).send({ error: 'Invalid credentials' });
+        }
+
+        const header = {
+            alg: "HS256",
+            typ: "JWT"
+        };
+        const payload = {
+            userId: user._id,
+            name: user.name,
+            email: user.email,
+            isActive: user.isActive
+        };
+
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
+        console.log('Generated JWT:', token);
+        res.status(200).send({ token });
+    } catch (error) {
+        console.error('Error during login:', error);
+        res.status(500).send({ error: error.message });
+    }
+});
 
 app.post('/users', async (req, res) => {
     try {

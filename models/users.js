@@ -12,19 +12,19 @@ const usersSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to hash the password before saving the users
-usersSchema.pre('save', async function (next) {
-    if (this.isModified('password') || this.isNew) {
-        try {
-            const salt = await bcrypt.genSalt(SALT_ROUNDS);
-            this.password = await bcrypt.hash(this.password, salt);
-            next();
-        } catch (error) {
-            next(error);
-        }
-    } else {
-        return next();
-    }
-});
+//usersSchema.pre('save', async function (next) {
+    //if (this.isModified('password') || this.isNew) {
+       // try {
+        //    const salt = await bcrypt.genSalt(SALT_ROUNDS);
+        //    this.password = await bcrypt.hash(this.password, salt);
+        //    next();
+        //} catch (error) {
+        //    next(error);
+        //}
+    //} else {
+       // return next();
+   // }
+//});
 
 // Method to compare given password with the hashed password stored in the database
 usersSchema.methods.comparePassword = async function (password) {
