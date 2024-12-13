@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import User from './models/users.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import authenticate from './middleware/auth.js';
 
 const app = express();
 const port = 3000;
@@ -31,6 +32,10 @@ mongoose
 
 app.get('/', (req, res) => {
     res.send('Hello, World!');
+});
+
+app.get('/dashboard', authenticate, (req, res) => { 
+    res.send('This is the dashboard, accessible only to authenticated users.'); 
 });
 
 async function verifyPassword(email, plainPassword) { 
