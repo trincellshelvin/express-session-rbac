@@ -69,3 +69,26 @@ If done correctly, the postman will submit to the database the entered details i
 
 ![Postman Post Bcrypt with Password Registration](/images/postmanpostregister.png)
 ![MongoDB Post Bcrypt with Password Registration](/images/mongodbpostregister.png)
+
+## Register User (assignment 4) with Login User
+
+Register user with the following link: http://localhost:3000/register with the following body in raw json form: 
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+This should return the following screenshots:
+![Registered User Postman](/images/postmanuserregistrationwithlogin.png)
+![Registered User MongoDB](/images/mongodbuserregistrationwithlogin.png)
+
+If all goes well, you should be able to now use this link:  http://localhost:3000/login with the following body in raw json form to login the same user with the proper message as it appears in the screenshot:
+
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+![Logged in User Postman](/images/postmanloggedinuser.png)
