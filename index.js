@@ -5,11 +5,11 @@ import User from './models/users.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import authenticate from './middleware/auth.js';
+import authorize from './middleware/role.js';
 
 const app = express();
 const port = 3000;
 
-// Middleware to parse JSON bodies
 app.use(express.json());
 
 dotenv.config();
@@ -38,40 +38,27 @@ app.get('/dashboard', authenticate, (req, res) => {
     res.send('This is the dashboard, accessible only to authenticated users.'); 
 });
 
-async function verifyPassword(email, plainPassword) { 
-    try { 
-        const user = await User.findOne({ email }); 
-        if (!user) { 
-            console.log('User not found'); 
-            return false; 
-        } 
-        const isMatch = await user.comparePassword(plainPassword); 
-        if (!isMatch) { 
-            console.log('Invalid password'); 
-        } else { 
-            console.log('Password is valid'); 
-        } 
-        return isMatch; 
-    } catch (error) { 
-        console.error('Error verifying password:', error); 
-        return false; 
-    }
-}
+app.get('/admin', [authenticate, authorize(['admin'])], (req, res) => {
+    res.send('This is the admin panel, accessible only to admin users.');
+});
 
 app.post('/register', async (req, res) => {
     try {
-        const { name, email, password, age, isActive } = req.body;
+        const { name, email, password, age, isActive, role } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).send({ error: 'Name, email, and password are required' });
         }
 
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
         const newUser = new User({
             name,
             email,
-            password,
+            password: hashedPassword,
             age,
-            isActive
+            isActive,
+            role
         });
 
         await newUser.save();
@@ -96,7 +83,7 @@ app.post('/login', async (req, res) => {
         }
         console.log('User found:', user);
 
-        const isMatch = await user.comparePassword(password);
+        const isMatch = await bcrypt.compare(password, user.password);
         console.log('Password match result:', isMatch);
 
         if (!isMatch) {
@@ -108,7 +95,8 @@ app.post('/login', async (req, res) => {
             userId: user._id,
             name: user.name,
             email: user.email,
-            isActive: user.isActive
+            isActive: user.isActive,
+            role: user.role
         };
 
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
@@ -117,80 +105,6 @@ app.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).send({ error: error.message });
-    }
-});
-
-app.post('/users', async (req, res) => {
-    try {
-        const { name, email, age, isActive } = req.body;
-        const newUser = new User({
-            name,
-            email,
-            age,
-            isActive
-        });
-        await newUser.save();
-        res.status(201).send(newUser);
-    } catch (error) {
-        res.status(400).send({ error: error.message });
-    }
-});
-
-app.get('/users', async (req, res) => {
-    try {
-        const users = await User.find();
-        res.status(200).send(users);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
-});
-
-app.get('/users/active', async (req, res) => {
-    try {
-        const activeUsers = await User.find({ isActive: true });
-        res.status(200).send(activeUsers);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
-});
-
-app.put('/users/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, email, age, isActive } = req.body;
-        const updatedUser = await User.findByIdAndUpdate(id, { name, email, age, isActive }, { new: true });
-        if (!updatedUser) {
-            return res.status(404).send({ error: 'User not found' });
-        }
-        res.status(200).send(updatedUser);
-    } catch (error) {
-        res.status(400).send({ error: error.message });
-    }
-});
-
-app.put('/users/:id/deactivate', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const deactivatedUser = await User.findByIdAndUpdate(id, { isActive: false }, { new: true });
-        if (!deactivatedUser) {
-            return res.status(404).send({ error: 'User not found' });
-        }
-        res.status(200).send(deactivatedUser);
-    } catch (error) {
-        res.status(400).send({ error: error.message });
-    }
-});
-
-app.delete('/users/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const deletedUser = await User.findByIdAndDelete(id);
-        if (!deletedUser) {
-            return res.status(404).send({ error: 'User not found' });
-        }
-        res.status(200).send({ message: 'User deleted successfully' });
-    } catch (error) {
-        res.status(400).send({ error: error.message });
     }
 });
 
