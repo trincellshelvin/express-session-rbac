@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 
-const testPassword = 'password123';
-const storedHash = '$2b$10$b1uCCnQcal5BUzeLzXwZKOcPD1/8i5t8nyqQBllX1UVe1hzqp10dS';
+const testPassword = 'adminpassword123';
+const storedHash = '$2b$10$sc4iTRCt0zqLJN9kAvKfJOWRqvtSFJepCfuo6GWNjvTVYMR.pHjiW';
 
 // Test comparison directly
 bcrypt.compare(testPassword, storedHash, (err, result) => {
